@@ -12,23 +12,40 @@ const sendInterest = async (req, res) => {
         const owner = await db.getAsync('SELECT * FROM users WHERE id = ?', [listing.owner_id]);
         const tenant = await db.getAsync('SELECT * FROM users WHERE id = ?', [tenant_id]);
         const tenantProfile = await db.getAsync('SELECT * FROM tenant_profiles WHERE tenant_id = ?', [tenant_id]);
+        if (!tenantProfile) {
+            return res.status(400).json({ error: 'Please create a tenant profile before showing interest in listings.' });
+        }
 
         const result = await db.runAsync(
             'INSERT INTO interests (listing_id, tenant_id, status) VALUES (?, ?, ?)',
             [listing_id, tenant_id, 'pending']
         );
 
-        // check score to send owner email if score > 80
-        const scoreEntry = await db.getAsync(
+        // check score to send owner email if score >= 80
+        let score = 0;
+        let scoreEntry = await db.getAsync(
             'SELECT score FROM compatibility_scores WHERE listing_id = ? AND tenant_profile_id = ?',
             [listing_id, tenantProfile.id]
         );
 
-        if (scoreEntry && scoreEntry.score >= 80) {
+        if (!scoreEntry) {
+            const { computeCompatibilityScore } = require('../services/llmService');
+            try {
+                scoreEntry = await computeCompatibilityScore(listing, tenantProfile);
+            } catch (e) {
+                console.error('Error computing compatibility score on the fly:', e);
+            }
+        }
+
+        if (scoreEntry) {
+            score = scoreEntry.score;
+        }
+
+        if (score >= 80) {
             await sendEmail(
                 owner.email, 
                 'High Match Tenant Interest!', 
-                `Tenant ${tenant.name} with an ${scoreEntry.score}% compatibility score just showed interest in your listing at ${listing.location}!`
+                `Tenant ${tenant.name} with an ${score}% compatibility score just showed interest in your listing at ${listing.location}!`
             );
         }
 

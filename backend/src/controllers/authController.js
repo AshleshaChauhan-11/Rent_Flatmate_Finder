@@ -56,6 +56,9 @@ const login = async (req, res) => {
 const getProfile = async (req, res) => {
     try {
         const user = await db.getAsync('SELECT id, email, role, name, created_at FROM users WHERE id = ?', [req.user.id]);
+        if (!user) {
+            return res.status(401).json({ error: 'User not found' });
+        }
         if (req.user.role === 'tenant') {
             const profile = await db.getAsync('SELECT * FROM tenant_profiles WHERE tenant_id = ?', [req.user.id]);
             user.profile = profile || null;

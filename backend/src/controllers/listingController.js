@@ -44,7 +44,22 @@ const getTenantListings = async (req, res) => {
             return res.status(400).json({ error: 'Create a tenant profile first to view scored listings' });
         }
 
-        const listings = await db.allAsync('SELECT * FROM listings WHERE is_filled = 0 ORDER BY created_at DESC');
+        const { location, maxRent } = req.query;
+        let query = 'SELECT * FROM listings WHERE is_filled = 0';
+        const params = [];
+
+        if (location) {
+            query += ' AND location LIKE ?';
+            params.push(`%${location}%`);
+        }
+        if (maxRent) {
+            query += ' AND rent <= ?';
+            params.push(parseFloat(maxRent));
+        }
+
+        query += ' ORDER BY created_at DESC';
+
+        const listings = await db.allAsync(query, params);
         const scoredListings = [];
 
         // Compute scores

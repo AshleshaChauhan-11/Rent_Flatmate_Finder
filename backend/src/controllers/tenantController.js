@@ -1,4 +1,4 @@
-const db = require('../../src/config/db');
+const db = require('../config/db');
 
 const upsertProfile = async (req, res) => {
     const { preferred_location, budget_range_min, budget_range_max, move_in_date } = req.body;

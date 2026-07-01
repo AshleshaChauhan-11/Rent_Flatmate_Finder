@@ -59,15 +59,15 @@ app.get('/api/chat/:interestId', authenticateToken, chatController.getChatMessag
 const activeConnections = new Map(); // map userId -> ws
 
 wss.on('connection', (ws, req) => {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    const token = url.searchParams.get('token');
-
-    if (!token) {
-        ws.close(1008, 'Token missing');
-        return;
-    }
-
     try {
+        const url = new URL(req.url || '', 'http://localhost');
+        const token = url.searchParams.get('token');
+
+        if (!token) {
+            ws.close(1008, 'Token missing');
+            return;
+        }
+
         const user = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkeychangeinprod');
         ws.userId = user.id;
         activeConnections.set(user.id, ws);
@@ -120,11 +120,13 @@ wss.on('connection', (ws, req) => {
         });
 
         ws.on('close', () => {
-            activeConnections.delete(user.id);
+            if (activeConnections.get(user.id) === ws) {
+                activeConnections.delete(user.id);
+            }
         });
 
     } catch (err) {
-        ws.close(1008, 'Invalid token');
+        ws.close(1008, 'Invalid token or connection error');
     }
 });
 
