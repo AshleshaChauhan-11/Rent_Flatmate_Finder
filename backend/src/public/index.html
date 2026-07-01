@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rent & Flatmate Finder</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container"></div>
+
+    <nav class="glass-nav">
+        <div class="nav-content">
+            <div class="logo">
+                <i data-lucide="home"></i>
+                <span>FlatmateFinder</span>
+            </div>
+            <div id="nav-links">
+                <!-- Dynamically populated based on auth -->
+            </div>
+        </div>
+    </nav>
+
+    <main id="app-root">
+        <!-- Views will be injected here by app.js router -->
+    </main>
+
+    <!-- Templates -->
+
+    <!-- Template: Auth -->
+    <template id="tpl-auth">
+        <div class="auth-container glass-panel animate-fade-in">
+            <h2 id="auth-title">Welcome Back</h2>
+            <div class="auth-tabs">
+                <button class="active" onclick="app.toggleAuthMode('login')">Login</button>
+                <button onclick="app.toggleAuthMode('register')">Register</button>
+            </div>
+            <form id="auth-form" onsubmit="app.handleAuth(event)">
+                <div id="register-fields" style="display: none;">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="auth-name">
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="auth-role">
+                            <option value="tenant">Tenant (Looking for room)</option>
+                            <option value="owner">Owner (Listing a room)</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="auth-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="auth-password" required>
+                </div>
+                <button type="submit" class="btn-primary w-full" id="auth-submit">Login</button>
+            </form>
+        </div>
+    </template>
+
+    <!-- Template: Tenant Dashboard -->
+    <template id="tpl-tenant-dash">
+        <div class="dashboard animate-fade-in">
+            <header class="dash-header">
+                <h2>Tenant Dashboard</h2>
+                <button class="btn-secondary" onclick="app.showProfileModal()"><i data-lucide="user"></i> My Profile</button>
+            </header>
+            
+            <div class="tabs">
+                <button class="active" onclick="app.switchTenantTab('listings', this)">Browse Matches</button>
+                <button onclick="app.switchTenantTab('interests', this)">My Interests</button>
+            </div>
+
+            <div id="tenant-content-area" class="mt-4">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </template>
+
+    <!-- Template: Owner Dashboard -->
+    <template id="tpl-owner-dash">
+        <div class="dashboard animate-fade-in">
+            <header class="dash-header">
+                <h2>Owner Dashboard</h2>
+                <button class="btn-primary" onclick="app.showListingModal()"><i data-lucide="plus"></i> New Listing</button>
+            </header>
+
+            <div class="tabs">
+                <button class="active" onclick="app.switchOwnerTab('listings', this)">My Listings</button>
+                <button onclick="app.switchOwnerTab('interests', this)">Interest Requests</button>
+            </div>
+
+            <div id="owner-content-area" class="mt-4">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </template>
+
+    <!-- Template: Admin Dashboard -->
+    <template id="tpl-admin-dash">
+        <div class="dashboard animate-fade-in">
+            <header class="dash-header">
+                <h2>Admin Panel</h2>
+            </header>
+            
+            <div class="stats-grid" id="admin-stats">
+                <!-- Stats injected here -->
+            </div>
+
+            <div class="tabs mt-4">
+                <button class="active" onclick="app.switchAdminTab('users', this)">Users</button>
+                <button onclick="app.switchAdminTab('listings', this)">Listings</button>
+            </div>
+
+            <div id="admin-content-area" class="mt-4">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </template>
+
+    <!-- Template: Chat Modal -->
+    <div id="chat-modal" class="modal-overlay hidden">
+        <div class="modal chat-modal glass-panel">
+            <header class="modal-header">
+                <h3 id="chat-title">Chat</h3>
+                <button class="btn-icon" onclick="app.closeChat()"><i data-lucide="x"></i></button>
+            </header>
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages -->
+            </div>
+            <form class="chat-input" onsubmit="app.sendChatMessage(event)">
+                <input type="text" id="chat-input-text" placeholder="Type a message..." required>
+                <button type="submit" class="btn-primary"><i data-lucide="send"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Template: Tenant Profile Modal -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal glass-panel">
+            <header class="modal-header">
+                <h3>My Preferences</h3>
+                <button class="btn-icon" onclick="app.closeModal('profile-modal')"><i data-lucide="x"></i></button>
+            </header>
+            <form onsubmit="app.saveProfile(event)" class="modal-body">
+                <div class="form-group">
+                    <label>Preferred Location</label>
+                    <input type="text" id="prof-location" required>
+                </div>
+                <div class="flex gap-4">
+                    <div class="form-group w-full">
+                        <label>Min Budget ($)</label>
+                        <input type="number" id="prof-min" required>
+                    </div>
+                    <div class="form-group w-full">
+                        <label>Max Budget ($)</label>
+                        <input type="number" id="prof-max" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Move-in Date</label>
+                    <input type="date" id="prof-date" required>
+                </div>
+                <button type="submit" class="btn-primary w-full mt-4">Save Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Template: Listing Modal -->
+    <div id="listing-modal" class="modal-overlay hidden">
+        <div class="modal glass-panel">
+            <header class="modal-header">
+                <h3>Post a Listing</h3>
+                <button class="btn-icon" onclick="app.closeModal('listing-modal')"><i data-lucide="x"></i></button>
+            </header>
+            <form onsubmit="app.saveListing(event)" class="modal-body">
+                <div class="form-group">
+                    <label>Location</label>
+                    <input type="text" id="list-location" required>
+                </div>
+                <div class="flex gap-4">
+                    <div class="form-group w-full">
+                        <label>Rent ($)</label>
+                        <input type="number" id="list-rent" required>
+                    </div>
+                    <div class="form-group w-full">
+                        <label>Available From</label>
+                        <input type="date" id="list-date" required>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="form-group w-full">
+                        <label>Room Type</label>
+                        <select id="list-type">
+                            <option>Private Room</option>
+                            <option>Shared Room</option>
+                            <option>Studio</option>
+                        </select>
+                    </div>
+                    <div class="form-group w-full">
+                        <label>Furnishing</label>
+                        <select id="list-furnish">
+                            <option>Furnished</option>
+                            <option>Semi-Furnished</option>
+                            <option>Unfurnished</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full mt-4">Post Listing</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
