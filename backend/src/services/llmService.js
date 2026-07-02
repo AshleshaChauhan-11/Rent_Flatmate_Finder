@@ -53,26 +53,34 @@ async function computeCompatibilityScore(listing, profile) {
         return existing;
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
     let scoreData = null;
     let isFallback = 0;
 
     if (apiKey) {
         try {
-            const promptText = `Given this room listing: ${JSON.stringify(listing)} and this tenant profile: ${JSON.stringify(profile)}, compute a compatibility score from 0 to 100 based on budget and location match. Return JSON: { "score": number, "explanation": "string" }`;
+            const promptText = `Given this room listing: ${JSON.stringify(listing)} and this tenant profile: ${JSON.stringify(profile)}, compute a compatibility score from 0 to 100 based on budget and location match. Return JSON only, no extra text: { "score": number, "explanation": "string" }`;
             
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: promptText }] }],
-                    generationConfig: { responseMimeType: "application/json" }
+                    model: 'llama-3.1-8b-instant',
+                    messages: [
+                        { role: 'system', content: 'You are a helpful assistant that returns only valid JSON. No markdown, no explanation, just JSON.' },
+                        { role: 'user', content: promptText }
+                    ],
+                    temperature: 0.3,
+                    response_format: { type: 'json_object' }
                 })
             });
 
             if (response.ok) {
                 const data = await response.json();
-                const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const contentText = data.choices?.[0]?.message?.content;
                 if (contentText) {
                     const parsed = JSON.parse(contentText);
                     if (parsed && typeof parsed.score === 'number' && typeof parsed.explanation === 'string') {
@@ -80,10 +88,10 @@ async function computeCompatibilityScore(listing, profile) {
                     }
                 }
             } else {
-                console.error("Gemini API Error Status:", response.status);
+                console.error("Groq API Error Status:", response.status);
             }
         } catch (error) {
-            console.error("Gemini API Request Failed", error);
+            console.error("Groq API Request Failed", error);
         }
     }
 
