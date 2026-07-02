@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 
-const API_BASE = 'http://localhost:3000/api';
-const WS_BASE = 'ws://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:3000';
 
 function App() {
   // Theme State
