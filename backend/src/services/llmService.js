@@ -41,7 +41,7 @@ function calculateRuleBasedScore(listing, profile) {
     return { score, explanation };
 }
 
-// Compute compatibility using Gemini API
+// Compute compatibility using Groq LLM API (fallback: rule-based)
 async function computeCompatibilityScore(listing, profile) {
     // Check if score already exists
     const existing = await db.getAsync(
