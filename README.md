@@ -310,6 +310,42 @@ Return JSON only, no extra text: { "score": number, "explanation": "string" }
 
 ---
 
+## Deployment Guide
+
+This monorepo is designed to be deployed as two services: a persistent Node.js backend on **Railway** and a static React frontend on **Vercel**.
+
+### 1. Backend Deployment (Railway)
+
+Since the backend uses a file-based SQLite database and WebSockets, it requires a persistent server environment (not serverless).
+
+1. Go to [Railway](https://railway.app) and sign in.
+2. Click **New Project** -> **Deploy from GitHub repo** and select this repository.
+3. Once selected, go to the Service settings:
+   - **Root Directory**: `backend`
+4. Under the **Variables** tab, add the following environment variables:
+   - `PORT`: `3000` (Railway will bind this automatically)
+   - `JWT_SECRET`: A secure random string
+   - `GROQ_API_KEY`: Your Groq API Key
+   - `SQLITE_DB_PATH`: `/data/database.sqlite` (Required for persistence)
+5. Under the **Volume** tab:
+   - Click **Add Volume** to attach a persistent volume to this service.
+   - Mount path: `/data` (This ensures your SQLite database file persists across restarts).
+6. Enable **Public Networking** to get your public API URL (e.g. `https://your-api.up.railway.app`).
+
+### 2. Frontend Deployment (Vercel)
+
+1. Go to [Vercel](https://vercel.com) and click **Add New** -> **Project**.
+2. Import this GitHub repository.
+3. In the project configuration:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: `frontend/rent-flatmate-finder`
+4. Under **Environment Variables**, add the API URLs pointing to your Railway backend:
+   - `VITE_API_URL`: `https://your-api.up.railway.app/api`
+   - `VITE_WS_URL`: `wss://your-api.up.railway.app`
+5. Click **Deploy**.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
