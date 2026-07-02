@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd frontend/rent-flatmate-finder && npm install && npm run build",
+  "outputDirectory": "frontend/rent-flatmate-finder/dist",
+  "framework": "vite"
+}
