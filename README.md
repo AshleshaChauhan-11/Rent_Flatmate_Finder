@@ -2,8 +2,7 @@
 
 An AI-Powered platform where owners list rooms and tenants find their perfect match through LLM-based compatibility scoring, real-time chat, and email notifications.
 
-**Live Demo:** [https://rent-flatmate-finder-ujf7-jlq38p5y4.vercel.app?_vercel_share=YZgJLwKi0Q1TAwJ7sPOiUmSA27rLaJyh]
-
+**Live Demo:** [Click here to view](https://rent-flatmate-finder-ujf7-jlq38p5y4.vercel.app?_vercel_share=YZgJLwKi0Q1TAwJ7sPOiUmSA27rLaJyh)
 ---
 
 ## Table of Contents
