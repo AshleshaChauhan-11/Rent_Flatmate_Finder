@@ -1,5 +1,12 @@
 {
   "buildCommand": "cd frontend/rent-flatmate-finder && npm install && npm run build",
   "outputDirectory": "frontend/rent-flatmate-finder/dist",
-  "framework": "vite"
+  "framework": "vite",
+  "env": {
+    "VITE_API_URL": "https://rentflatmatefinder-production.up.railway.app/api",
+    "VITE_WS_URL": "wss://rentflatmatefinder-production.up.railway.app"
+  },
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
