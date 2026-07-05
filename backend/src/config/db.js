@@ -2,7 +2,15 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const dbPath = process.env.SQLITE_DB_PATH ? path.resolve(process.env.SQLITE_DB_PATH) : path.resolve(__dirname, '../../database.sqlite');
+// In production (Railway), default to /data/database.sqlite (persistent volume).
+// In development, fall back to the local file next to the backend folder.
+const defaultDbPath = process.env.NODE_ENV === 'production'
+    ? '/data/database.sqlite'
+    : path.resolve(__dirname, '../../database.sqlite');
+
+const dbPath = process.env.SQLITE_DB_PATH
+    ? path.resolve(process.env.SQLITE_DB_PATH)
+    : defaultDbPath;
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {

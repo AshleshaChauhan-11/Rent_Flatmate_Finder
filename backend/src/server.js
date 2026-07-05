@@ -20,9 +20,24 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-app.use(cors());
+const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+    : ['http://localhost:5173', 'https://rent-flatmate-finder-ujf7-jlq38p5y4.vercel.app'];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl, Postman)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error(`CORS: origin ${origin} not allowed`));
+        }
+    },
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // ==== REST API ROUTES ====
 
